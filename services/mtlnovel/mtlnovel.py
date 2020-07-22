@@ -93,7 +93,6 @@ def get_list_raw_items(instance, page, max=100):
         _item_data['slug'] = slugify(_item_data['title'])
         """Add item"""
         _items.append(_item_data)
-        break
     """Return items"""
     return _items
 
