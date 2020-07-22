@@ -8,7 +8,9 @@ import services.mtlnovel.mtlnovel as mtlnovel
 
 def get_latest(req: Request, res: Response, next: Next):
     """Get all novel from latests page"""
-    _novels = mtlnovel.get_latest()
+    _novels = mtlnovel.get_latest(
+        limit=req.param('limit')
+    )
     """Check if exist an error"""
     if _novels['valid'] is False:
         return res.bad_request(_novels)
