@@ -10,7 +10,7 @@ MTLNOVEL_LIMIT_LATEST = app.config.get('MTLNOVEL_LIMIT_LATEST')
 def get_latest(req: Request, res: Response, next: Next):
     """Get all novel from latests page"""
     _novels = mtlnovel.get_latest(
-        limit=req.param('limit', MTLNOVEL_LIMIT_LATEST)
+        limit=req.param('limit', MTLNOVEL_LIMIT_LATEST, int)
     )
     """Check if exist an error"""
     if _novels['valid'] is False:
