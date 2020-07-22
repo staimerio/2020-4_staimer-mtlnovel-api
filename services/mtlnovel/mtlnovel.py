@@ -79,7 +79,7 @@ def get_data_item(instance, item):
         return None
 
 
-def get_list_raw_items(instance, page, max=100):
+def get_list_raw_items(instance, page, limit=100):
     """Declare all variables"""
     _items = list()
     """Get article html from his website"""
@@ -93,6 +93,9 @@ def get_list_raw_items(instance, page, max=100):
         _item_data['slug'] = slugify(_item_data['title'])
         """Add item"""
         _items.append(_item_data)
+        """Validate if has the max"""
+        if len(_items) >= limit:
+            break
     """Return items"""
     return _items
 
@@ -104,12 +107,12 @@ def get_instance_from_lang(lang):
     raise ValueError("Language {0} is invalid.".format(lang))
 
 
-def get_latest(lang="en", max=10):
+def get_latest(lang="en", limit=10):
     """Settings environment"""
     _mtlnovel = get_instance_from_lang(lang)
     """Request to mtlnovel web site for latest novel"""
     _items_raw = get_list_raw_items(
-        _mtlnovel, "", max)
+        _mtlnovel, "", limit)
     """Validate if data exists"""
     if not _items_raw:
         """Return error if data is invalid"""
