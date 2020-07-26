@@ -62,10 +62,56 @@ def get_data_items_container(instance, path):
     return _items
 
 
+def get_data_items_json(instance, page=0):
+    """Declare all variables"""
+    _items = list()
+    """ Set url to consume"""
+    _url = "{0}/wp-admin/admin-ajax.php?action=rcnt_update&view_all=yes&moreItemsPageIndex={1}".format(
+        instance.url_base,
+        page
+    )
+    """GET Request to url"""
+    _req = requests.get(_url)
+    """Get data for request"""
+    _content = _req.json()
+    """Get all items"""
+    _items = _content['items']
+    """Return all items"""
+    return _items
+
+
+def get_data_items_pages(instance, pages):
+    """Define the list"""
+    _items = []
+    for _page in range(0, pages):
+        _items_json_page = get_data_items_json(instance, _page)
+        """Combine the pages"""
+        _items += _items_json_page
+    return _items
+
+
 def get_data_item(instance, item):
     try:
         """Find the a element"""
         _data_item = item.find('h3').find('a', href=True)
+        """Get url"""
+        _url = _data_item['href']
+        """Check that the url exists"""
+        if _url == "#":
+            raise Exception('URL is invalid.')
+        """Get text from data"""
+        _title = _data_item.text
+        _url = _url.replace(instance.url_base, "")
+        return get_node_item(_url, _title, YEAR, instance.host, instance.site)
+    except Exception as e:
+        return None
+
+
+def get_data_item_json(instance, item):
+    try:
+        _soup = BeautifulSoup(item['novel_permalink'], 'html.parser')
+        """Find the a element"""
+        _data_item = _soup.find('a', href=True)
         """Get url"""
         _url = _data_item['href']
         """Check that the url exists"""
@@ -100,6 +146,27 @@ def get_list_raw_items(instance, page, limit=100):
     return _items
 
 
+def get_list_json_items(instance, pages, limit=100):
+    """Declare all variables"""
+    _items = list()
+    """Get article html from his website"""
+    _items_json = get_data_items_pages(instance, pages)
+    for _item_json in _items_json:
+        _item_data = get_data_item_json(instance, _item_json)
+        """Check if item exists"""
+        if not _item_data:
+            continue
+        """Slugify the item's title"""
+        _item_data['slug'] = slugify(_item_data['title'])
+        """Add item"""
+        _items.append(_item_data)
+        """Validate if has the max"""
+        if len(_items) >= limit:
+            break
+    """Return items"""
+    return _items
+
+
 def get_instance_from_lang(lang):
     """Get an MTLNovel instance from a language"""
     if lang == "en":
@@ -107,12 +174,12 @@ def get_instance_from_lang(lang):
     raise ValueError("Language {0} is invalid.".format(lang))
 
 
-def get_latest(lang="en", limit=10):
+def get_latest(lang="en", pages=1, limit=10):
     """Settings environment"""
     _mtlnovel = get_instance_from_lang(lang)
     """Request to mtlnovel web site for latest novel"""
-    _items_raw = get_list_raw_items(
-        _mtlnovel, "", limit)
+    _items_raw = get_list_json_items(
+        _mtlnovel, pages, limit)
     """Validate if data exists"""
     if not _items_raw:
         """Return error if data is invalid"""
@@ -190,7 +257,12 @@ def get_volumes_by_slug(instance, path, last_vol=0, last_ch=0):
             _url = _chapter['permalink']
 
             _chapters_list.append(
-                {"title": _title, "url": _url, "number": _number}
+                {
+                    u"title": _title,
+                    u"url": _url,
+                    u"number": _number,
+                    u"prefix": "Chapter {0}".format(_number)
+                }
             )
     return _chapters_list
 

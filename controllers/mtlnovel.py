@@ -5,12 +5,14 @@ from retic import Request, Response, Next, App as app
 from retic.services.responses import success_response_service
 import services.mtlnovel.mtlnovel as mtlnovel
 MTLNOVEL_LIMIT_LATEST = app.config.get('MTLNOVEL_LIMIT_LATEST')
+MTLNOVEL_PAGES_LATEST = app.config.get('MTLNOVEL_PAGES_LATEST')
 
 
 def get_latest(req: Request, res: Response, next: Next):
     """Get all novel from latests page"""
     _novels = mtlnovel.get_latest(
-        limit=req.param('limit', MTLNOVEL_LIMIT_LATEST, int)
+        limit=req.param('limit', MTLNOVEL_LIMIT_LATEST, int),
+        pages=req.param('pages', MTLNOVEL_PAGES_LATEST, int)
     )
     """Check if exist an error"""
     if _novels['valid'] is False:
