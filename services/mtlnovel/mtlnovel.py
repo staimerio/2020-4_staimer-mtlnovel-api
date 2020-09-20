@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 # Services
 from retic.services.responses import success_response_service, error_response_service
-from retic.services.general.urls import slugify
+from retic.services.general.urls import urlencode, slugify
 from retic.services.general.json import parse
 
 # Utils
@@ -62,13 +62,15 @@ def get_data_items_container(instance, path):
     return _items
 
 
-def get_data_items_json(instance, page=0):
+def get_data_items_json(instance, page=0, action="rcnt_update", q=""):
     """Declare all variables"""
     _items = list()
     """ Set url to consume"""
-    _url = "{0}/wp-admin/admin-ajax.php?action=rcnt_update&view_all=yes&moreItemsPageIndex={1}".format(
+    _url = "{0}/wp-admin/admin-ajax.php?action={1}&view_all=yes&moreItemsPageIndex={2}&q={3}".format(
         instance.url_base,
-        page
+        action,
+        page,
+        q
     )
     """GET Request to url"""
     _req = requests.get(_url)
@@ -212,7 +214,7 @@ def get_publication_by_slug(instance, path):
         instance.url_base, URL_MAIN
     )
 
-    _data_table = _soup.find(id='panelnovelinfo').find(class_='info')
+    _data_table = _soup.find(id='panelnovelinfo')  # .find(class_='info')
     _data = _data_table.find_all('tr')
 
     _type = _data[INDEX['type']].find_all('td')[-1].text
@@ -330,4 +332,42 @@ def get_chapters_by_slug(novel_slug, chapters_ids, limit=50, lang="en"):
     """"Response to client"""
     return success_response_service(
         data=_data_response
+    )
+
+
+def get_search(search, limit, hreflang="en"):
+    """Settings environment"""
+    _mtlnovel = get_instance_from_lang(hreflang)
+    """Declare all variables"""
+    _items = list()
+    """Prepare all payload"""
+    _encode_url = urlencode(search)
+    """Request to mtlnovel web site for search novel"""
+    _items_json_page = get_data_items_json(
+        _mtlnovel, action="autosuggest", q=_encode_url)
+    """Validate if data exists"""
+    if not _items_json_page:
+        """Return error if data is invalid"""
+        return error_response_service(
+            msg="Files not found."
+        )
+    _items_json = _items_json_page.pop()
+    for _item_json in _items_json['results']:
+        _url = _item_json['permalink'].replace(_mtlnovel.url_base, "")
+        _item_data = get_node_item(
+            _url,
+            _item_json['title'].replace(
+                '<strong>', '').replace('</strong>', ''),
+            YEAR, _mtlnovel.host, _mtlnovel.site
+        )
+        """Slugify the item's title"""
+        _item_data['slug'] = slugify(_item_data['title'])
+        """Add item"""
+        _items.append(_item_data)
+        """Validate if has the max"""
+        if len(_items) >= limit:
+            break
+    """Response data"""
+    return success_response_service(
+        data=_items
     )
