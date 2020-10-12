@@ -35,6 +35,18 @@ class MTLNovelEN(object):
         self.host = app.config.get("MTLNOVEL_EN_HOST")
         self.url_base = app.config.get("MTLNOVEL_EN_URL")
         self.lang = app.config.get("MTLNOVEL_EN_LANG")
+        self.hreflang = app.config.get("MTLNOVEL_EN_HREFLANG")
+
+
+class MTLNovelES(object):
+
+    def __init__(self):
+        """Set the variables"""
+        self.site = app.config.get("MTLNOVEL_ES_SITE")
+        self.host = app.config.get("MTLNOVEL_ES_HOST")
+        self.url_base = app.config.get("MTLNOVEL_ES_URL")
+        self.lang = app.config.get("MTLNOVEL_ES_LANG")
+        self.hreflang = app.config.get("MTLNOVEL_ES_HREFLANG")
 
 
 def get_text_from_req(url):
@@ -158,8 +170,13 @@ def get_list_json_items(instance, pages, limit=100):
         """Check if item exists"""
         if not _item_data:
             continue
+        """If lang is different than en(english), add lang to slug"""
+        if instance.hreflang != 'en':
+            _title = "{0}-{1}".format(_item_data['title'], instance.hreflang)
+        else:
+            _title = _item_data['title']
         """Slugify the item's title"""
-        _item_data['slug'] = slugify(_item_data['title'])
+        _item_data['slug'] = slugify(_title)
         """Add item"""
         _items.append(_item_data)
         """Validate if has the max"""
@@ -173,6 +190,8 @@ def get_instance_from_lang(lang):
     """Get an MTLNovel instance from a language"""
     if lang == "en":
         return MTLNovelEN()
+    if lang == "es":
+        return MTLNovelES()
     raise ValueError("Language {0} is invalid.".format(lang))
 
 
@@ -225,7 +244,7 @@ def get_publication_by_slug(instance, path):
     return get_node_light_novel_item(
         _url, _title, YEAR, _type, _author,
         _cover, _status, _categories, instance.lang,
-        instance.host, instance.site
+        instance.host, instance.site, instance.hreflang
     )
 
 

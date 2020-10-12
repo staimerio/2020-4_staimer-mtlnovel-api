@@ -12,8 +12,9 @@ MTLNOVEL_EN_HREFLANG = app.config.get('MTLNOVEL_EN_HREFLANG')
 def get_latest(req: Request, res: Response, next: Next):
     """Get all novel from latests page"""
     _novels = mtlnovel.get_latest(
+        lang=req.param('lang', MTLNOVEL_EN_HREFLANG),
         limit=req.param('limit', MTLNOVEL_LIMIT_LATEST, int),
-        pages=req.param('pages', MTLNOVEL_PAGES_LATEST, int)
+        pages=req.param('pages', MTLNOVEL_PAGES_LATEST, int),
     )
     """Check if exist an error"""
     if _novels['valid'] is False:
@@ -29,9 +30,10 @@ def get_latest(req: Request, res: Response, next: Next):
 def get_chapters_by_slug(req: Request, res: Response, next: Next):
     """Get all chapters from novel page"""
     _novel = mtlnovel.get_chapters_by_slug(
-        req.param('slug_novel'),
-        req.args.getlist('chapters_ids'),
-        int(req.param('limit'))
+        novel_slug=req.param('slug_novel'),
+        chapters_ids=req.args.getlist('chapters_ids'),
+        limit=int(req.param('limit')),
+        lang=req.param('lang', MTLNOVEL_EN_HREFLANG),
     )
     """Check if exist an error"""
     if _novel['valid'] is False:
