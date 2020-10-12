@@ -373,16 +373,18 @@ def get_search(search, limit, hreflang="en"):
     _items_json = _items_json_page.pop()
     for _item_json in _items_json['results']:
         _url = _item_json['permalink'].replace(_mtlnovel.url_base, "")
+        _title = _item_json['title'] or slugify(_url)
         _item_data = get_node_item(
             _url,
-            _item_json['title'].replace(
+            _title.replace(
                 '<strong>', '').replace('</strong>', ''),
             YEAR, _mtlnovel.host, _mtlnovel.site
         )
         """Slugify the item's title"""
         _item_data['slug'] = slugify(_item_data['title'])
-        """Add item"""
-        _items.append(_item_data)
+        if _item_data['slug']:
+            """Add item"""
+            _items.append(_item_data)
         """Validate if has the max"""
         if len(_items) >= limit:
             break
