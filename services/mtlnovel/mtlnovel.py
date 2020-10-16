@@ -49,6 +49,17 @@ class MTLNovelES(object):
         self.hreflang = app.config.get("MTLNOVEL_ES_HREFLANG")
 
 
+class MTLNovelID(object):
+
+    def __init__(self):
+        """Set the variables"""
+        self.site = app.config.get("MTLNOVEL_ID_SITE")
+        self.host = app.config.get("MTLNOVEL_ID_HOST")
+        self.url_base = app.config.get("MTLNOVEL_ID_URL")
+        self.lang = app.config.get("MTLNOVEL_ID_LANG")
+        self.hreflang = app.config.get("MTLNOVEL_ID_HREFLANG")
+
+
 def get_text_from_req(url):
     """GET Request to url"""
     _req = requests.get(url)
@@ -190,8 +201,10 @@ def get_instance_from_lang(lang):
     """Get an MTLNovel instance from a language"""
     if lang == "en":
         return MTLNovelEN()
-    if lang == "es":
+    elif lang == "es":
         return MTLNovelES()
+    elif lang == "id":
+        return MTLNovelID()
     raise ValueError("Language {0} is invalid.".format(lang))
 
 
