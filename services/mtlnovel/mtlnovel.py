@@ -36,6 +36,7 @@ class MTLNovelEN(object):
         self.url_base = app.config.get("MTLNOVEL_EN_URL")
         self.lang = app.config.get("MTLNOVEL_EN_LANG")
         self.hreflang = app.config.get("MTLNOVEL_EN_HREFLANG")
+        self.langname = app.config.get("MTLNOVEL_EN_LANGNAME")
 
 
 class MTLNovelES(object):
@@ -47,6 +48,7 @@ class MTLNovelES(object):
         self.url_base = app.config.get("MTLNOVEL_ES_URL")
         self.lang = app.config.get("MTLNOVEL_ES_LANG")
         self.hreflang = app.config.get("MTLNOVEL_ES_HREFLANG")
+        self.langname = app.config.get("MTLNOVEL_ES_LANGNAME")
 
 
 class MTLNovelID(object):
@@ -58,6 +60,19 @@ class MTLNovelID(object):
         self.url_base = app.config.get("MTLNOVEL_ID_URL")
         self.lang = app.config.get("MTLNOVEL_ID_LANG")
         self.hreflang = app.config.get("MTLNOVEL_ID_HREFLANG")
+        self.langname = app.config.get("MTLNOVEL_ID_LANGNAME")
+
+
+class MTLNovelFR(object):
+
+    def __init__(self):
+        """Set the variables"""
+        self.site = app.config.get("MTLNOVEL_FR_SITE")
+        self.host = app.config.get("MTLNOVEL_FR_HOST")
+        self.url_base = app.config.get("MTLNOVEL_FR_URL")
+        self.lang = app.config.get("MTLNOVEL_FR_LANG")
+        self.hreflang = app.config.get("MTLNOVEL_FR_HREFLANG")
+        self.langname = app.config.get("MTLNOVEL_FR_LANGNAME")
 
 
 def get_text_from_req(url):
@@ -182,10 +197,7 @@ def get_list_json_items(instance, pages, limit=100):
         if not _item_data:
             continue
         """If lang is different than en(english), add lang to slug"""
-        if instance.hreflang != 'en':
-            _title = "{0}-{1}".format(_item_data['title'], instance.hreflang)
-        else:
-            _title = _item_data['title']
+        _title = "{0}-{1}".format(_item_data['title'], instance.langname)
         """Slugify the item's title"""
         _item_data['slug'] = slugify(_title)
         """Add item"""
@@ -205,6 +217,8 @@ def get_instance_from_lang(lang):
         return MTLNovelES()
     elif lang == "id":
         return MTLNovelID()
+    elif lang == "fr":
+        return MTLNovelFR()
     raise ValueError("Language {0} is invalid.".format(lang))
 
 
