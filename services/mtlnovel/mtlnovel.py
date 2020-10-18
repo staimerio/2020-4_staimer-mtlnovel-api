@@ -20,10 +20,14 @@ from services.utils.general import get_node_item, get_node_light_novel_item
 YEAR = app.config.get('MTLNOVEL_YEAR', callback=int)
 URL_MAIN = app.config.get('MTLNOVEL_URL_MAIN')
 INDEX = {
+    u"alt_name": 1,
     u"type": 5,
     u"categories": 6,
     u"author": 3,
     u"status": 2
+}
+HEADERS = {
+    'Cookie': '__cfduid=df32538df286dfc063b0932fc416153601600529386; __cf_bm=b657fed1d2a227bc9b5eed0e5791ef634ef6f7b7-1602965163-1800-AQfcFmU/1Q6+m66YGLfBamV33b4qodf4WTwR53fCHnkvSCHdhp6dsxrVSYBlZL9UjZ+KwyfHs7NyoOEnGV7n3pY=; cookie_raw=on; wordpress_logged_in_1e37748443e835e7a0279d52036235a5=darku%7C1603137930%7C61Yyt4bIMPrzASEiXthOk2shkebfVoiHVYIsfA4mtrF%7C03d8d09bef30ed3339ab716bb21439621500adff372face826b26d79d9077145'
 }
 
 
@@ -37,6 +41,7 @@ class MTLNovelEN(object):
         self.lang = app.config.get("MTLNOVEL_EN_LANG")
         self.hreflang = app.config.get("MTLNOVEL_EN_HREFLANG")
         self.langname = app.config.get("MTLNOVEL_EN_LANGNAME")
+        self.headers = None
 
 
 class MTLNovelES(object):
@@ -49,6 +54,7 @@ class MTLNovelES(object):
         self.lang = app.config.get("MTLNOVEL_ES_LANG")
         self.hreflang = app.config.get("MTLNOVEL_ES_HREFLANG")
         self.langname = app.config.get("MTLNOVEL_ES_LANGNAME")
+        self.headers = None
 
 
 class MTLNovelID(object):
@@ -61,6 +67,7 @@ class MTLNovelID(object):
         self.lang = app.config.get("MTLNOVEL_ID_LANG")
         self.hreflang = app.config.get("MTLNOVEL_ID_HREFLANG")
         self.langname = app.config.get("MTLNOVEL_ID_LANGNAME")
+        self.headers = None
 
 
 class MTLNovelFR(object):
@@ -73,11 +80,25 @@ class MTLNovelFR(object):
         self.lang = app.config.get("MTLNOVEL_FR_LANG")
         self.hreflang = app.config.get("MTLNOVEL_FR_HREFLANG")
         self.langname = app.config.get("MTLNOVEL_FR_LANGNAME")
+        self.headers = None
 
 
-def get_text_from_req(url):
+class MTLNovelZH(object):
+
+    def __init__(self):
+        """Set the variables"""
+        self.site = app.config.get("MTLNOVEL_ZH_SITE")
+        self.host = app.config.get("MTLNOVEL_ZH_HOST")
+        self.url_base = app.config.get("MTLNOVEL_ZH_URL")
+        self.lang = app.config.get("MTLNOVEL_ZH_LANG")
+        self.hreflang = app.config.get("MTLNOVEL_ZH_HREFLANG")
+        self.langname = app.config.get("MTLNOVEL_ZH_LANGNAME")
+        self.headers = HEADERS
+
+
+def get_text_from_req(url, headers={}):
     """GET Request to url"""
-    _req = requests.get(url)
+    _req = requests.get(url, headers=headers)
     """Check if status code is 200"""
     if _req.status_code != 200:
         raise Exception("The request to {0} failed".format(url))
@@ -219,6 +240,8 @@ def get_instance_from_lang(lang):
         return MTLNovelID()
     elif lang == "fr":
         return MTLNovelFR()
+    elif lang == "zh":
+        return MTLNovelZH()
     raise ValueError("Language {0} is invalid.".format(lang))
 
 
@@ -263,6 +286,7 @@ def get_publication_by_slug(instance, path):
     _data_table = _soup.find(id='panelnovelinfo')  # .find(class_='info')
     _data = _data_table.find_all('tr')
 
+    _alt_name = _data[INDEX['alt_name']].find_all('td')[-1].text
     _type = _data[INDEX['type']].find_all('td')[-1].text
     _categories = _data[INDEX['categories']].find_all(
         'td')[-1].text.split(", ")
@@ -271,7 +295,8 @@ def get_publication_by_slug(instance, path):
     return get_node_light_novel_item(
         _url, _title, YEAR, _type, _author,
         _cover, _status, _categories, instance.lang,
-        instance.host, instance.site, instance.hreflang
+        instance.host, instance.site, instance.hreflang, 
+        _alt_name
     )
 
 
@@ -317,7 +342,7 @@ def get_volumes_by_slug(instance, path, last_vol=0, last_ch=0):
 
 def get_chapter_html_by_url(instance, url):
     """Get content from url"""
-    _content = get_text_from_req(url)
+    _content = get_text_from_req(url, headers=instance.headers)
     """Format the response"""
     _soup = BeautifulSoup(_content, 'html.parser')
     _container = _soup.find(class_='post')
@@ -325,6 +350,12 @@ def get_chapter_html_by_url(instance, url):
     _title = "<h2>{0}</h2>".format(_container.find('h1').text)
     # print title
     _content_p = _container.find(class_='par').find_all('p')
+    if instance.headers:
+        list_p = []
+        for i in range(0, len(_content_p)):
+            if i % 2 == 0:
+                list_p.append(_content_p[i])
+        _content_p = list_p
     _content = str(_content_p[:]).strip('[]')
     """Transform data"""
     _content_html = _title + _content

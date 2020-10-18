@@ -18,7 +18,8 @@ def get_node_item(url, title, year, host, site=''):
 
 def get_node_light_novel_item(
     url, title, year, type, author, cover,
-    status, categories, lang, host, site='', hreflang=''
+    status, categories, lang, host, site='', hreflang='',
+    alt_name='',
 ):
     """"If lang is different than en(english), add lang to slug"""
     if hreflang != 'en':
@@ -37,6 +38,7 @@ def get_node_light_novel_item(
         u'categories': categories,
         u'lang': lang,
         u'service': host,
-        u'site': site
+        u'site': site,
+        u'alt_name': alt_name,
     }
     return _item
