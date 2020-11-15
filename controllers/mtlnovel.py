@@ -31,7 +31,7 @@ def get_chapters_by_slug(req: Request, res: Response, next: Next):
     """Get all chapters from novel page"""
     _novel = mtlnovel.get_chapters_by_slug(
         novel_slug=req.param('slug_novel'),
-        chapters_ids=req.args.getlist('chapters_ids'),
+        chapters_ids=req.param('chapters_ids'),
         limit=int(req.param('limit')),
         lang=req.param('lang', MTLNOVEL_EN_HREFLANG),
     )
