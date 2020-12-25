@@ -383,11 +383,11 @@ def get_chapter_html_by_url(instance, url):
             _content += "<p>{0}</p><p>{1}</p>".format(
                 str(_text_white[:7]).strip('[]'),
                 str(_text_white[7:]).strip('[]')
-            ).replace('\\u3000\\u3000','').replace("'",'')
+            ).replace('\\u3000\\u3000', '').replace("'", '')
     else:
         _content = str(_content_p[:]).strip('[]')
     """Transform data"""
-    _content_html = _title + _content
+    _content_html = _title + _content.replace('mtlnovel', 'lightnovelpdf')
     _content_html = _content_html.replace('\n', '').replace(">, <", "><")
     """Response content of chapter"""
     return _content_html
