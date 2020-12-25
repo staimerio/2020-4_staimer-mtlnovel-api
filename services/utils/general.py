@@ -23,7 +23,7 @@ def get_node_light_novel_item(
 ):
     """"If lang is different than en(english), add lang to slug"""
     if hreflang != 'en':
-        _title = "{0}-{1}".format(title, hreflang)
+        _title = "{0}-{1}".format(title, lang)
     else:
         _title = title
     _item = {

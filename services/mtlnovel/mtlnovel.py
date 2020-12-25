@@ -29,6 +29,8 @@ INDEX = {
 HEADERS = {
     'Cookie': '__cfduid=df32538df286dfc063b0932fc416153601600529386; __cf_bm=b657fed1d2a227bc9b5eed0e5791ef634ef6f7b7-1602965163-1800-AQfcFmU/1Q6+m66YGLfBamV33b4qodf4WTwR53fCHnkvSCHdhp6dsxrVSYBlZL9UjZ+KwyfHs7NyoOEnGV7n3pY=; cookie_raw=on; wordpress_logged_in_1e37748443e835e7a0279d52036235a5=darku%7C1603137930%7C61Yyt4bIMPrzASEiXthOk2shkebfVoiHVYIsfA4mtrF%7C03d8d09bef30ed3339ab716bb21439621500adff372face826b26d79d9077145'
 }
+MTLNOVEL_USERNAME = app.config.get('MTLNOVEL_USERNAME')
+MTLNOVEL_PASSWORD = app.config.get('MTLNOVEL_PASSWORD')
 
 
 class MTLNovelEN(object):
@@ -93,7 +95,27 @@ class MTLNovelZH(object):
         self.lang = app.config.get("MTLNOVEL_ZH_LANG")
         self.hreflang = app.config.get("MTLNOVEL_ZH_HREFLANG")
         self.langname = app.config.get("MTLNOVEL_ZH_LANGNAME")
-        self.headers = HEADERS
+        self.headers = self.login(MTLNOVEL_USERNAME, MTLNOVEL_PASSWORD)
+
+    def login(self, username, password):
+        """GET Request to url"""
+        _url = "{0}/login/".format(self.url_base)
+        _payload = {
+            "log": username,
+            "pwd": password,
+            "submit": "",
+            "redirect_to": "https://www.mtlnovel.com/wp-admin/",
+            "testcookie": 1
+        }
+        _req = requests.post(_url, data=_payload)
+        _headers_json = _req.cookies.get_dict()
+        _content = "cookie_raw=on; "
+        for attr in _headers_json:
+            _content += "{0}={1}; ".format(attr, _headers_json[attr])
+        _headers = {
+            'Cookie': _content
+        }
+        return _headers
 
 
 def get_text_from_req(url, headers={}):
@@ -295,7 +317,7 @@ def get_publication_by_slug(instance, path):
     return get_node_light_novel_item(
         _url, _title, YEAR, _type, _author,
         _cover, _status, _categories, instance.lang,
-        instance.host, instance.site, instance.hreflang, 
+        instance.host, instance.site, instance.hreflang,
         _alt_name
     )
 
@@ -350,13 +372,20 @@ def get_chapter_html_by_url(instance, url):
     _title = "<h2>{0}</h2>".format(_container.find('h1').text)
     # print title
     _content_p = _container.find(class_='par').find_all('p')
-    if instance.headers:
+    if instance.hreflang == 'zh':
         list_p = []
+        _content = ""
         for i in range(0, len(_content_p)):
             if i % 2 == 0:
                 list_p.append(_content_p[i])
-        _content_p = list_p
-    _content = str(_content_p[:]).strip('[]')
+        for par in list_p:
+            _text_white = par.text.split('，')
+            _content += "<p>{0}</p><p>{1}</p>".format(
+                str(_text_white[:7]).strip('[]'),
+                str(_text_white[7:]).strip('[]')
+            ).replace('\\u3000\\u3000','').replace("'",'')
+    else:
+        _content = str(_content_p[:]).strip('[]')
     """Transform data"""
     _content_html = _title + _content
     _content_html = _content_html.replace('\n', '').replace(">, <", "><")
